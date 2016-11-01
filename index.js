@@ -44,8 +44,7 @@ class Parser {
     }
 
     winston.silly(`executing ${args}`);
-    var args = transformFn(args) || [];
-    return actionFn(...args);
+    return actionFn(...(transformFn(args) || []));
   }
 }
 
