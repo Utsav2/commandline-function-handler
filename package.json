@@ -1,5 +1,5 @@
 {
-  "name": "node-command",
+  "name": "commandline-function-handler",
   "version": "0.0.1",
   "description": "command parsing for Node",
   "main": "index.js",
