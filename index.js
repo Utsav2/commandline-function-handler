@@ -2,49 +2,50 @@
 const assert = require('assert');
 const winston = require('winston');
 
+const default_handler_fn = {
+  transformFn: () => {
+    return [].prototype.slice.call(arguments);
+  },
+  validateFn: () => {},
+}
+
 class Parser {
-  constructor(emptyInputFn, notFoundFn) {
-    assert(emptyInputFn instanceof Function);
-    assert(notFoundFn instanceof Function);
-    this.handlers = {}
-    this.emptyInputFn = emptyInputFn;
-    this.notFoundFn = notFoundFn;
+  constructor(args) {
+    assert(args.emptyInputFn instanceof Function, 'emptyInputFn is not a function');
+    assert(args.notFoundFn instanceof Function, 'notFoundFn is not a function');
+    this.defaultFns = args;
+    this.handlers = {};
   }
 
-  register(keyword, actionFn, transformFn, validateFn) {
+  register(keyword, args) {
     assert(typeof keyword === 'string');
-    assert(actionFn instanceof Function);
-    assert(transformFn instanceof Function);
-    assert((validateFn instanceof Function) || !validateFn);
-
-    this.handlers[keyword] = [actionFn, transformFn, validateFn];
+    assert(args.actionFn instanceof Function, 'actionFn is not a function');
+    assert((args.transformFn instanceof Function) || !args.transformFn, 'transformFn is not a function');
+    assert((args.validateFn instanceof Function) || !args.validateFn, 'validateFn is not a function');
+    this.handlers[keyword] = Object.assign({}, default_handler_fn, args);
   }
   
   exec(args) {
     if (!args || args.length == 0) {
       winston.silly('No args given');
-      return this.emptyInputFn();
+      return this.defaultFns.emptyInputFn();
     }
+
     if (!(args[0] in this.handlers)) {
       winston.silly(`${args[0]} is not in handlers`);
-      return this.notFoundFn(args);
+      return this.defaultFns.notFoundFn(args);
     }
 
-    const handlerFns = this.handlers[args[0]];
-    const actionFn = handlerFns[0];
-    const transformFn = handlerFns[1];
-    const validateFn = handlerFns[2];
+    const fns = this.handlers[args[0]];
 
-    if (validateFn) {
-      const isInvalid = validateFn(args);
-      if (isInvalid) {
-        winston.silly(`${isInvalid}`);
-        return isInvalid;
-      }
+    const isInvalid = fns.validateFn(args);
+    if (isInvalid) {
+      winston.silly(`${isInvalid}`);
+      return isInvalid;
     }
 
     winston.silly(`executing ${args}`);
-    return actionFn(...(transformFn(args) || []));
+    return fns.actionFn(...(fns.transformFn(args) || []));
   }
 }
 
