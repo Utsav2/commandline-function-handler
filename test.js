@@ -81,6 +81,19 @@ describe('Parser', function() {
     expect(done).to.be.equal(true);
   });
 
+  it('should call action fn on valid keyword and empty other functions', function() {
+    const p = new parser.Parser({
+      emptyInputFn: noop,
+      notFoundFn: noop
+    });
+    var done = false;
+    p.register('hi', {
+      actionFn: () => { done = true; },
+    });
+    p.exec(['hi']);
+    expect(done).to.be.equal(true);
+  });
+
   it('should return validation error and not call actionFn on error', function() {
     const p = new parser.Parser({
       emptyInputFn: noop,

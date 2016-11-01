@@ -4,7 +4,7 @@ const winston = require('winston');
 
 const default_handler_fn = {
   transformFn: () => {
-    return [].prototype.slice.call(arguments);
+    return Array.prototype.slice.call(arguments);
   },
   validateFn: () => {},
 }
